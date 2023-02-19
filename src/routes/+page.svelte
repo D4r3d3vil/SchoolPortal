@@ -1,6 +1,6 @@
 <script>
 
 </script>
-<a href="./student">student</a>
-<a href="./admin">admin</a>
-<a href="./teacher">teacher</a>
+<a href="./student">student</a><br>
+<a href="./admin">admin</a><br>
+<a href="./teacher">teacher</a><br>
