@@ -1,5 +1,8 @@
 <script>
-    let docsnap, data, username, password, userRef, pressed, question, option, questions, optionlist, finished, adds, added, students, studentRef, writabledata;
+    let docsnap, data, username, password, userRef, pressed, question, option, questions, optionlist, finished, adds, added, students, studentRef, writabledata, text, href1, text2;
+    text = ""
+    text2 = ""
+    href1 = ""
 questions =[] 
 optionlist =[] 
 added =[]
@@ -40,6 +43,7 @@ async function get_data(){
         }
     }
 }
+setTimeout(function(){text = "please "; text2 = "sign in"; href1 = "./teacher"}, 5000)
 function add_option(){
 if(option.replace(" ", "") != ""){
 if (optionlist.length < 4) {
@@ -94,7 +98,7 @@ async function upload(){
 <button on:click={upload}>Upload exam</button>
 {:else}
 {#if data == undefined}
-<p>please <a href="./teacher">sign in</a></p>
+<p>{text}<a href={href1}>{text2}</a></p>
 {#if pressed}
 <br>
 <p class="logging">loading...</p>
