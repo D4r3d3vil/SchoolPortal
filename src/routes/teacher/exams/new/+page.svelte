@@ -1,5 +1,5 @@
 <script>
-    let docsnap, data, username, password, userRef, pressed, question, option, questions, optionlist, finished, adds, added, students, studentRef;
+    let docsnap, data, username, password, userRef, pressed, question, option, questions, optionlist, finished, adds, added, students, studentRef, writabledata;
 questions, optionlist, added, students = []
 question, option = ""
 import {browser} from '$app/environment'
@@ -57,12 +57,6 @@ questions= questions
 }
 async function finish(){
     finished = true
-    for (let i = 0; i < added.length; i++) {
-        studentRef = doc(db, "Users", added[i])
-        studentData = await getDoc(studentRef)
-        studentData = studentData.data()     
-        studentData.data.exams.push({})  
-    }
 }
 function add_student(student_name){
 if (added.includes(student_name)) {
@@ -71,7 +65,31 @@ if (added.includes(student_name)) {
     added = added.push(student_name)
 }
 }
+function dbparse() {
+    for (let i = 0; i < questions.length; i++) {
+      writabledata.push({})
+    }
+}
+async function upload(){
+    writabledata = []
+    dbparse()
+    for (let i = 0; i < added.length; i++) {
+        studentRef = doc(db, "Users", added[i])
+        studentData = await getDoc(studentRef)
+        studentData = studentData.data()    
+    }
+}
 </script>
+{#if finished}
+{#each students as student}
+<div class="student">
+    <p>{student.name}</p>
+    <input type="checkbox" name="check" on:click={() => add_student(student.name)}>
+</div>    
+{/each}
+<br>
+<button on:click={upload}>Upload exam</button>
+{:else}
 {#if data == undefined}
 <p>please <a href="./teacher">sign in</a></p>
 {#if pressed}
@@ -103,13 +121,6 @@ if (added.includes(student_name)) {
 <br><br><br>
 <button on:click={finish}>finish/submit</button>
 {/if}
-{#if finished}
-{#each students as student}
-<div class="student">
-    <p>{student.name}</p>
-    <input type="checkbox" name="check" on:click={() => add_student(student.name)}>
-</div>    
-{/each}
 {/if}
 <style>
     .op{
