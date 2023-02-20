@@ -1,7 +1,11 @@
 <script>
     let docsnap, data, username, password, userRef, pressed, question, option, questions, optionlist, finished, adds, added, students, studentRef, writabledata;
-questions, optionlist, added, students = []
+questions =[] 
+optionlist =[] 
+added =[]
+students = []
 question, option = ""
+console.log(questions)
 import {browser} from '$app/environment'
 import {doc, getDoc, setDoc} from 'firebase/firestore'
 import {db} from '../../../env/firebase/db'
@@ -26,7 +30,6 @@ async function get_data(){
     docsnap = userRef.data()
     if(docsnap.password == password){
         data = docsnap  
-        students = data.data.students
     }else{
         if(docsnap.passchange != undefined && docsnap.passlist.includes(password)){
             pressed = false
