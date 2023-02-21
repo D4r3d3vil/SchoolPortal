@@ -31,10 +31,11 @@ if(browser&&localStorage.getItem("teacher_user")){
 }
 </script>
 {#if data == undefined}
-<p>please <a href="./">sign in</a></p>
 {#if pressed}
 <br>
 <p class="logging">loading...</p>
+{:else}
+<p>please <a href="./">sign in</a></p>
 {/if}
 {:else}
 <div class="panel">
