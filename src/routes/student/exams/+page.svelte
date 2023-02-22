@@ -35,7 +35,12 @@ userRef = await getDoc(userRef)
     if(userRef.data().linked_data.passwd == password){
         docsnap = userRef.data()   
     }else{
-        alert("password was changed " + new Date(userRef.data().passchange.seconds*1000))
+        if (userRef.data().passchange && userRef.data().passlist.includes(password)) {
+        alert("password was changed " + new Date(userRef.data().passchange))
+        }else{
+            alert("Wrong password")
+        }
+        pressed = false
         browser&&localStorage.clear()
     }
 }
@@ -65,8 +70,8 @@ async function start(id){
 }
 async function finish(){
     clearInterval(timerinit)
-    maxscore = docsnap.data.exams[inexam].test.length
-    score = maxscore + 1
+    maxscore = docsnap.data.exams[inexam].test.length - 1
+    score = maxscore
     for (let i = 0; i < docsnap.data.exams[inexam].test.length; i++) {
         if (!docsnap.data.exams[inexam].test[i].answeredas) {
             score--
@@ -124,7 +129,6 @@ async function soft_refresh(){
                 </tr>
                 {#each docsnap.data.exams as exam}
                     {#if exam.due > Date.now() || exam.submit}
-                    <button on:click={console.log(exam.due, Date.now())}>test</button>
                     <tr style="border: solid 1px black;"><td style="border: solid 1px black;">{exam.name}</td><td style="border: solid 1px black;">{exam.subject}</td>{#if parseFloat(new Date(exam.due).getMinutes()) < 10}<td style="border: solid 1px black;">{new Date(exam.due).getMonth() + "/" + new Date(exam.due).getDate() + "/" + new Date(exam.due).getFullYear() + ": " + new Date(exam.due).getHours() + ":0" + new Date(exam.due).getMinutes()}</td>{:else}<td style="border: solid 1px black;">{new Date(exam.due).getMonth() + "/" + new Date(exam.due).getDate() + "/" +new Date(exam.due).getFullYear() + ", " + new Date(exam.due).getHours() + ":" + new Date(exam.due).getMinutes()}</td>{/if}<td style="border: solid 1px black;">{exam.notes}</td><td style="border: solid 1px black;">{#if exam.submit} <p>Done <button class="grade" on:click={() => show_score(exam.id)}>score</button></p> {:else}<button on:click={() => start(exam.id)}>start</button>{/if}</td></tr>
                     {:else}
                     <tr style="border: solid 1px black;font-style: italic;text-align:center;"><td style="border: solid 1px black; ">{exam.name}</td><td style="border: solid 1px black;text-decoration:line-through;">{exam.subject}</td>{#if parseFloat(new Date(exam.due).getMinutes()) < 10}<td style="border: solid 1px black;text-decoration:underline;">{new Date(exam.due).getMonth() + "/" + new Date(exam.due).getDate() + "/" + new Date(exam.due).getFullYear() + ": " + new Date(exam.due).getHours() + ":0" + new Date(exam.due).getMinutes()}</td>{:else}<td style="border: solid 1px black;text-decoration:underline;">{new Date(exam.due).getMonth() + "/" + new Date(exam.due).getDate() + "/" +new Date(exam.due).getFullYear() + ", " + new Date(exam.due).getHours() + ":" + new Date(exam.due).getMinutes()}</td>{/if}<td style="border: solid 1px black;text-decoration:line-through;">{exam.notes}</td><td style="border: solid 1px black;">{#if exam.submit} <p>Done <button class="grade" on:click={() => show_score(exam.id)}>score</button></p> {:else}<p style="text-decoration:underline;">Missed</p>{/if}</td></tr>

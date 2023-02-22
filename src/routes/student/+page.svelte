@@ -1,51 +1,40 @@
 <script>
     let docsnap, username, password, userRef, pressed;
+docsnap =""
+username = browser && localStorage.getItem("login_user")
+password = browser && localStorage.getItem("login_pass")
     pressed = false
 import {browser} from '$app/environment'
 import {doc, getDoc} from 'firebase/firestore'
 import {db} from '../env/firebase/db'
-import {storage} from '../env/client-db/writables'
-let data = storage.data
-if(browser && localStorage.getItem("login_user") != undefined){
-    username = browser && localStorage.getItem("login_user")
-    password = browser && localStorage.getItem("login_pass")
-    pressed = true
-    login()
-}else{
-    data.displayname = undefined
-}
-async function login(){
-    pressed = true
-    userRef = doc(db, "Users", username);
-    userRef = await getDoc(userRef)
+async function get_data(){
+docsnap = ""
+userRef = doc(db, "Users", username);
+userRef = await getDoc(userRef)
     if(userRef.data() == undefined){
         pressed = false
         return alert("inexistent user")
     }
-    docsnap = userRef.data()
-    if(docsnap.linked_data.passwd == password){
-        data = docsnap
-        storage.data = data
-        if(data.displayname == undefined){
-            data.displayname = username
-        }
-        browser && localStorage.setItem("login_user", username)
-        browser && localStorage.setItem("login_pass", password)        
+    if(userRef.data().linked_data.passwd == password){
+        docsnap = userRef.data()   
     }else{
-        if(userRef.data().passchange != undefined && userRef.data().passlist.includes(password)){
-            alert("password was changed " + new Date(docsnap.passchange.seconds*1000))
-            pressed = false
+        if (userRef.data().passchange && userRef.data().passlist.includes(password)) {
+        alert("password was changed " + new Date(userRef.data().passchange))
         }else{
-        alert("incorrect password")
-        pressed = false
+            alert("Wrong password")
         }
+        pressed = false
+        browser&&localStorage.clear()
     }
 }
+if(browser&&localStorage.getItem("login_user")){
+get_data()
+}
 </script>
-{#if data.displayname == undefined}
+{#if docsnap == ""}
 <input type="text" bind:value={username}><br>
 <input type="password" bind:value={password}>
-<button on:click={login}>login</button>
+<button on:click={get_data}>login</button>
 {#if pressed}
 <br>
 <p class="logging">logging in...</p>
@@ -53,7 +42,7 @@ async function login(){
 {:else}
 <div class="page">
     <div class="welcome">
-        <p>welcome {data.displayname}</p>
+        <p>welcome {username}</p>
     </div>
     <div class="panel">
         <div class="exams"><a href="./student/exams">exams</a></div>
