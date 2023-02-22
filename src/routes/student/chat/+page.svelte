@@ -1,7 +1,8 @@
 <script>
-let docsnap, userRef, messages, messageRef, username, password, msg, dataRef, dataR, element, i
+let docsnap, userRef, messages, messageRef, username, password, msg, dataRef, dataR, element, i, Id
 messages = ""
 docsnap = ""
+msg = ""
 import {browser} from '$app/environment'
 import {doc, getDoc, setDoc} from 'firebase/firestore'
 import { onMount, tick } from 'svelte';
@@ -18,7 +19,7 @@ const scrollToBottom = async (node) => {
     if(messages != ""){
     scrollToBottom(element)
     }else{
-    i = setInterval(scroller, 50)
+    i = setInterval(scroller, 100)
     }
   }
 username = browser && localStorage.getItem("login_user")
@@ -60,14 +61,30 @@ async function asyncronize(){
     asyncronize()
 }
 async function send(){
+    if(msg.replace(" ", "")){
     dataRef = doc(db, "Servers", docsnap.ingroup)
     dataR = await getDoc(dataRef)
     dataR = dataR.data()
-    dataR.messages.push({sender:username, content:msg})
-    console.log(dataR)
+    dataR.messages.push({sender:username, content:msg, id:Math.random()})
+    msg = ""
     await setDoc(dataRef, dataR)
     await tick()
     scrollToBottom(element)
+    }
+}
+async function deleteMsg(msgId){
+    dataRef = doc(db, "Servers", docsnap.ingroup)
+    dataR = await getDoc(dataRef)
+    dataR = dataR.data()
+    Id = msgId
+    for (let i = 0; i < dataR.messages.length; i++) {
+        if (dataR.messages[i].id == Id){
+          dataR.messages[i].content = "deleted" 
+        }
+    }
+    dataR.messages = dataR.messages
+    console.log(dataR, msgId)
+    await setDoc(dataRef, dataR)
 }
 if(browser&&localStorage.getItem("login_user")){
 get_data()
@@ -82,7 +99,7 @@ get_data()
                 {#if message.sender != username}
                     <div class="message"><p>{message.sender}: {message.content}</p></div>
                 {:else}
-                <div class="message"><p>you: <i>{message.content}</i></p></div>
+                <div class="message"><p>you: <i>{message.content}</i>{#if message.content != "deleted"}<button on:click={() => deleteMsg(message.id)}>delete</button>{/if}</p></div>
                 {/if}
                 {/each}
                 <div class="send"><input type="text" class="sendinp" placeholder="send a message" bind:value={msg}><button on:click={send}>send</button></div>
@@ -109,6 +126,7 @@ get_data()
         position:absolute;
    bottom:0;
    height:60px;
+   margin-left: 9vw;
     }
     .sendinp{
         width: 70vw;
