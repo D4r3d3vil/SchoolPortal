@@ -9,37 +9,28 @@ if(browser && localStorage.getItem("admin_user") != undefined){
     login()
 }
 async function login(){
-    pressed = true
-    userRef = doc(db, "Admins", username);
-    userRef = await getDoc(userRef)
+    docsnap = ""
+userRef = doc(db, "Admins", username);
+userRef = await getDoc(userRef)
+console.log(password)
+console.log(userRef.data().linked_data.passwd)
     if(userRef.data() == undefined){
         pressed = false
         return alert("inexistent user")
     }
-    docsnap = userRef.data()
-    if(docsnap.linked_data.passwd == password){
-        data = docsnap
-        if(data.displayname == undefined){
-            data.displayname = username
-        }
-        browser && localStorage.setItem("admin_user", username)
-        browser && localStorage.setItem("admin_pass", password)        
+    if(userRef.data().linked_data.passwd == password){
+        docsnap = userRef.data()
+        browser&&localStorage.setItem("admin_user", username)
+        browser&&localStorage.setItem("admin_pass", password)
     }else{
-        if(browser && localStorage.getItem("login_user") != undefined && docsnap.passchange != undefined && docsnap.passlist.includes(password)){
-            pressed = false
-            alert("password was changed " + docsnap.passchange)
+        if (userRef.data().passchange && userRef.data().passlist.includes(password)) {
+        alert("password was changed " + new Date(userRef.data().passchange))
         }else{
-            pressed = false
-        alert("incorrect password")
+            alert("Wrong password")
         }
+        pressed = false
+        browser&&localStorage.clear()
     }
-}
-async function create(){
-await setDoc(doc(db, "Users", newuser), {data:{exams:{}, inbox:{}}, linked_data:{}})
-alert("created")
-}
-async function createt(){
-    await setDoc(doc(db, "Teachers", tuser), {exams:{}, inbox:{}, linked_data:{}, password:tpass})
 }
 </script>
 {#if data == undefined}
@@ -55,9 +46,10 @@ async function createt(){
     <div class="welcome">
         <p>welcome {data.displayname}</p>
     </div>
-    <div class="adminpanel"><div class="createuser">
-        <h3>Add user: </h3><div class="form"><input type="text" class="user" placeholder="username" bind:value={newuser}><br> <input type="text" class="password" placeholder="password" bind:value={newpass}><br><button class="createuser" on:click={create}>Create</button></div><br>
-        <h3>Add teacher: </h3><div class="form"><input type="text" class="user" placeholder="username" bind:value={tuser}><br> <input type="text" class="password" placeholder="password" bind:value={tpass}><br><button class="createuser" on:click={createt}>Create</button></div>
-    </div></div>
+    <div class="adminpanel">
+        <a href="./groups">groups</a>
+        <a href="./students">students</a>
+        <a href="./teachers">teachers</a>
+    </div>
 </div>
 {/if}

@@ -17,6 +17,8 @@ userRef = await getDoc(userRef)
     }
     if(userRef.data().linked_data.passwd == password){
         docsnap = userRef.data()   
+        browser&&localStorage.setItem("login_user", username)
+        browser&&localStorage.setItem("login_pass", password)
     }else{
         if (userRef.data().passchange && userRef.data().passlist.includes(password)) {
         alert("password was changed " + new Date(userRef.data().passchange))

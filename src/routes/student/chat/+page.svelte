@@ -1,13 +1,13 @@
 <script>
-let docsnap, userRef, messages, messageRef, username, password, msg, dataRef, dataR, element, i, Id
+let docsnap, userRef, messages, username, password, msg, element, i, Id, group, groupRef, groupDoc
 messages = ""
 docsnap = ""
 msg = ""
+group = ""
 import {browser} from '$app/environment'
 import {doc, getDoc, setDoc} from 'firebase/firestore'
 import { onMount, tick } from 'svelte';
 import {db} from '../../env/firebase/db'
-import jQuery from 'jquery'
 const scrollToBottom = async (node) => {
     node.scroll({ top: node.scrollHeight, behavior: 'smooth' });
   }; 
@@ -34,7 +34,6 @@ userRef = await getDoc(userRef)
     }
     if(userRef.data().linked_data.passwd == password){
         docsnap = userRef.data()
-        get_messages()
     }else{
         if (userRef.data().passchange && userRef.data().passlist.includes(password)) {
         alert("password was changed " + new Date(userRef.data().passchange))
@@ -46,45 +45,44 @@ userRef = await getDoc(userRef)
     }
 }
 async function get_messages(){
-    messages = ""
-    if(docsnap.ingroup){ 
-        messageRef = doc(db, "Servers", docsnap.ingroup)
-        messageRef = await getDoc(messageRef)
-        messages = messageRef.data().messages
-        asyncronize()
-    }
+    groupDoc = doc(db, "Servers", groupRef)
+    group = await getDoc(groupDoc)
+    asyncronize()
 }
 async function asyncronize(){
-    messageRef = doc(db, "Servers", docsnap.ingroup)
-    messageRef = await getDoc(messageRef)
-    messages = messageRef.data().messages
-    asyncronize()
+    if(group != ""){
+    group = await getDoc(groupDoc)
+    group = group.data()
+    messages = group.messages
+    setTimeout(asyncronize, 500)
+    }
 }
 async function send(){
     if(msg.replace(" ", "")){
-    dataRef = doc(db, "Servers", docsnap.ingroup)
-    dataR = await getDoc(dataRef)
-    dataR = dataR.data()
-    dataR.messages.push({sender:username, content:msg, id:Math.random()})
+    group.messages.push({sender:username, content:msg, id:Math.random()})
     msg = ""
-    await setDoc(dataRef, dataR)
+    await setDoc(groupDoc, group)
     await tick()
     scrollToBottom(element)
     }
 }
 async function deleteMsg(msgId){
-    dataRef = doc(db, "Servers", docsnap.ingroup)
-    dataR = await getDoc(dataRef)
-    dataR = dataR.data()
     Id = msgId
-    for (let i = 0; i < dataR.messages.length; i++) {
-        if (dataR.messages[i].id == Id){
-          dataR.messages[i].content = "deleted" 
+    for (let i = 0; i < group.messages.length; i++) {
+        if (group.messages[i].id == Id){
+          group.messages[i].content = "deleted" 
         }
     }
-    dataR.messages = dataR.messages
-    console.log(dataR, msgId)
-    await setDoc(dataRef, dataR)
+    group = group
+    await setDoc(groupDoc, group)
+}
+function join(group_name){
+groupRef = group_name
+get_messages()
+console.log(groupRef)
+}
+function back(){
+    group = ""
 }
 if(browser&&localStorage.getItem("login_user")){
 get_data()
@@ -92,21 +90,29 @@ get_data()
 </script>
 {#if docsnap != ""}
 <div class="page">
-    <div class="panel">
+    <div class="panel">{#if group != ""}
+        <button on:click={back} class="back">Back</button><br>
+        {/if}
         <div class="messagebox">
-            {#if messages != ""}<div class="messages" bind:this={element}>
+            {#if group != ""}<div class="messages" bind:this={element}>
                 {#each messages as message}
+                {#if message.content != "deleted"}
                 {#if message.sender != username}
                     <div class="message"><p>{message.sender}: {message.content}</p></div>
                 {:else}
                 <div class="message"><p>you: <i>{message.content}</i>{#if message.content != "deleted"}<button on:click={() => deleteMsg(message.id)}>delete</button>{/if}</p></div>
                 {/if}
+                {/if}
                 {/each}
-                <div class="send"><input type="text" class="sendinp" placeholder="send a message" bind:value={msg}><button on:click={send}>send</button></div>
-            </div>
+                <div class="send">{#if docsnap.sendperms.includes(group)}<form on:submit|preventDefault={() => send()}><input type="text" class="sendinp" placeholder="send a message" bind:value={msg}><button on:click={send}>send</button></form>{:else} <p>you are not allowed to send messages in this channel. to <a href="../../contact">contact a teacher or admin</a></p>{/if}</div>
+        </div>
                 {:else}
-                {#if docsnap.ingroup}
-                <p>loading...</p>
+                {#if docsnap.ingroup && docsnap.ingroup.length > 0}
+                <div class="groups">
+                {#each docsnap.ingroup as groupname}
+                <div class="group"><button on:click={() => join(groupname)} class="groupbut">{groupname}</button></div>
+                {/each}
+                </div>
                 {:else}
                 <p>You dont have permission to access any groups. <a href="../../contact/admin/">Contact an admin</a></p>
                 {/if}
@@ -126,16 +132,21 @@ get_data()
         position:absolute;
    bottom:0;
    height:60px;
-   margin-left: 9vw;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   margin-left: 22.5vw;
     }
     .sendinp{
-        width: 70vw;
+        width: 50vw;
+        text-align: center;
     }
     .messages{
         width: 100vw;
         height: 90vh;
         overflow-y: scroll;
         border: solid 1px black;
+        text-align: center;
     }
     ::-webkit-scrollbar {
             width: 6px;
@@ -162,5 +173,20 @@ get_data()
         border: solid 1px black;
         margin-left: 0.75vw;
         height: 95vh;
+        border-radius: 1%;
+    }
+    .group{
+     border: solid 1px black;
+    }
+    .groupbut{
+        background-color: white;
+        border: none;
+        width: 5vw;
+    }
+    .back{
+        width: 92vw;
+        margin-left: 1vw;
+        text-align: center;
+        border-radius: 2%;
     }
 </style>
