@@ -98,7 +98,7 @@ get_data()
                 {#each messages as message}
                 {#if message.content != "deleted"}
                 {#if message.sender != username}
-                    <div class="message"><p>{message.sender}: {message.content}</p></div>
+                    <div class="message"><p>{message.sender}: {message.content}</p><br>{#if message.links}{#each message.links as link} <a href={link}>{link}</a> {/each}{/if}</div>
                 {:else}
                 <div class="message"><p>you: <i>{message.content}</i>{#if message.content != "deleted"}<button on:click={() => deleteMsg(message.id)}>delete</button>{/if}</p></div>
                 {/if}
