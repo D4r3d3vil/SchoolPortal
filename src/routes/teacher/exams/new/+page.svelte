@@ -11,7 +11,9 @@ students = []
 writabledata = []
 question = ""
 option = ""
-console.log(questions)
+  let countdown;
+  import Keypad from './Keypad.svelte';
+import Timer from './Timer.svelte';
 import {browser} from '$app/environment'
 import {doc, getDoc, setDoc} from 'firebase/firestore'
 import {db} from '../../../env/firebase/db'
@@ -113,7 +115,7 @@ async function upload(){
 function prepareDate(d) {
   [m, d, y] = d.split("-"); //Split the string
   console.log(Date.now())
-  return [m,d -1,y]
+  return [m,d,y]
 }
 </script>
 {#if finished}
@@ -124,7 +126,22 @@ function prepareDate(d) {
 </div>    
 {/each}
 <br>
-<p>due date: </p><input type="date" placeholder="date" bind:value={duee} on:change={function(){due = ((new Date(...prepareDate(duee)).getTime()))}}><br><p>name: </p><input type="text" placeholder="name" bind:value={ename}><p>additional notes</p><input type="text" bind:value={anotes} placeholder="example: practical exam"><br><input type="text" bind:value={time} placeholder="time">
+<p>due date: </p><input type="date" placeholder="date" bind:value={duee} on:change={function(){due = ((new Date(...prepareDate(duee)).getTime()))}}><br><p>name: </p><input type="text" placeholder="name" bind:value={ename}><p>additional notes</p><input type="text" bind:value={anotes} placeholder="example: practical exam"><br><div>
+    {#if countdown}
+      <Timer
+        on:new={() => {
+          countdown = null;
+        }}
+        {countdown}
+      />
+    {:else}
+      <Keypad
+        on:countdown={(e) => {
+          countdown = e.detail;
+        }}
+      />
+    {/if}
+  </div>
 <button on:click={upload}>Upload exam</button>
 {:else}
 {#if data == undefined}
@@ -140,7 +157,11 @@ function prepareDate(d) {
 {#each questions as q}
 <h4>question: {q.qtext}</h4>
 {#each q.options as option}
+{#if q.options[parseInt(q.correct)] == option}
+<button class="opl">{option}</button>
+{:else}
 <button class="op">{option}</button>
+{/if}
 {/each}
 {/each}
 </div>
@@ -162,9 +183,13 @@ function prepareDate(d) {
 {/if}
 {/if}
 <style>
-    .op{
+    .op, .opl{
         margin-left: 20vw;
         width: fit-content;
+        background-color: red;
+    }
+    .opl{
+background-color: green;
     }
     .preview{
         border: solid 1px black;
