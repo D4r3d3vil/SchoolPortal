@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "baseUrl": "./",
+        "paths": {
+            "@env/*":["env/*"],
+            "@db/*":["env/db/server/*"],
+            "@client-db/*":["env/db/client/*"],
+            "@components/*":["src/components/*"]
+        }
+    }
+}
